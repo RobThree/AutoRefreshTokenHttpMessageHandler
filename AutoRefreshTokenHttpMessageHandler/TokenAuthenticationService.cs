@@ -35,14 +35,14 @@ public class TokenAuthenticationService(IOptions<TokenOptions> options, HttpClie
         {
             result.EnsureSuccessStatusCode();
             return Token.FromTokenResponse(
-                await result.Content.ReadFromJsonAsync<TokenResponse>(cancellationToken) ?? throw new HttpRequestException(Translations.INVALID_OR_UNEXPECTED_RESPONSE, null, result.StatusCode),
+                await result.Content.ReadFromJsonAsync<TokenResponse>(cancellationToken) ?? throw new ExtendedHttpRequestException(Translations.INVALID_OR_UNEXPECTED_RESPONSE, null, result.StatusCode),
                 _timeprovider.GetUtcNow()
             );
         }
         catch (HttpRequestException ex)
         {
-            var err = await result.Content.ReadFromJsonAsync<ErrorResponse>(cancellationToken) ?? throw new HttpRequestException(Translations.INVALID_OR_UNEXPECTED_RESPONSE, null, result.StatusCode);
-            throw new HttpRequestException($"[{err.Error}] {err.Description}", ex, result.StatusCode);
+            var err = await result.Content.ReadFromJsonAsync<ErrorResponse>(cancellationToken) ?? throw new ExtendedHttpRequestException(Translations.INVALID_OR_UNEXPECTED_RESPONSE, null, result.StatusCode);
+            throw new ExtendedHttpRequestException($"[{err.Error}] {err.Description}", ex, result.StatusCode);
         }
     }
 
@@ -76,7 +76,7 @@ public class TokenAuthenticationService(IOptions<TokenOptions> options, HttpClie
                 return await RetrieveTokenAsync(GrantTypes.Refresh, cancellationToken);
             }
         }
-        catch (HttpRequestException ex) when (ex.StatusCode is HttpStatusCode.BadRequest or HttpStatusCode.Unauthorized) { }
+        catch (ExtendedHttpRequestException ex) when (ex.StatusCode is HttpStatusCode.BadRequest or HttpStatusCode.Unauthorized) { }
         // Refresh token expired or refresh failed? Try to get a new token
         return await RetrieveTokenAsync(GetGrantType(), cancellationToken).ConfigureAwait(false);
     }
@@ -99,4 +99,9 @@ public class TokenAuthenticationService(IOptions<TokenOptions> options, HttpClie
         [property: JsonPropertyName("error")] string Error,
         [property: JsonPropertyName("error_description")] string Description
     );
+
+    private class ExtendedHttpRequestException(string message, Exception? innerException, HttpStatusCode httpStatusCode) : HttpRequestException(message, innerException)
+    {
+        public HttpStatusCode StatusCode { get; private set; } = httpStatusCode;
+    }
 }
