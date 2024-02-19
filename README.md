@@ -1,4 +1,4 @@
-# ![icon.png](icon.png) AutoRefreshTokenHttpMessageHandler
+# ![Logo](https://raw.githubusercontent.com/RobThree/AutoRefreshTokenHttpMessageHandler/main/icon.png) AutoRefreshTokenHttpMessageHandler
 
 This is a thread-safe implementation of a `DelegatingHandler`, available as [Nuget package](https://www.nuget.org/packages/AutoRefreshTokenHttpMessageHandler/), that automatically refreshes the access token when the access token expires whilst **not** serializing all requests. Most implementations use a lock internally which essentially makes all async actions synchronous again. This implementation only blocks during the actual refresh. Inspired by Bryan Helms' [Thread-Safe Auth Token Store Using ConcurrentDictionary and AsyncLazy](https://bryanhelms.com/2021/03/29/thread-safe-auth-token-store-using-concurrentdictionary-and-asynclazy.html).
 
